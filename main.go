@@ -10,10 +10,10 @@ import (
 	"strings"
 )
 
-var T1 = [9][8]rune{}
-var T2 = [9][8]rune{}
-var T3 = [9][8]rune{}
-var T4 = [9][8]rune{}
+var T1 = [95]rune{}
+var T2 = [95]rune{}
+var T3 = [95]rune{}
+var T4 = [95]rune{}
 
 func main() {
 	fmt.Println("Would you like to encrypt or decrypt a message?")
@@ -36,7 +36,6 @@ func main() {
 
 func Encrypt() {
 	fmt.Println("Enter the message to encrypt:")
-
 	reader := bufio.NewReader(os.Stdin)
 	message, err := reader.ReadString('\n')
 	if err != nil {
@@ -44,11 +43,9 @@ func Encrypt() {
 	}
 	message = strings.TrimSpace(message)
 
-	Tables()
-
-	a := rand.Intn(36)
-	b := rand.Intn(36)
-	c := rand.Intn(36)
+	a := rand.Intn(72) + 1
+	b := rand.Intn(72) + 1
+	c := rand.Intn(72) + 1
 	encryptedMessage := Cipher(a, b, c, message)
 
 	fmt.Println("Encrypted message:", encryptedMessage)
@@ -56,101 +53,61 @@ func Encrypt() {
 
 func Decrypt() {
 	fmt.Println("Enter the message to decrypt:")
-
 	reader := bufio.NewReader(os.Stdin)
 	message, err := reader.ReadString('\n')
 	if err != nil {
 		log.Fatal("Invalid message")
 	}
-
-	Tables()
+	message = strings.TrimSpace(message)
 
 	decryptedMessage := Decipher(message)
 
 	fmt.Println("Decrypted message:", decryptedMessage)
 }
 
-func Tables() {
-	rows := 9
-	cols := 8
-
-	count := 0
-	for i := 0; i < rows; i++ {
-		for j := 0; j < cols; j++ {
-			T1[i][j] = '0' + rune(count) // ASCII values from '0' to 'z'
-			count++
+func Tables(a int) {
+	count := a
+	for i := 0; i < 95; i++ {
+		T1[i] = ' ' + rune(count%95)
+		if T1[i] < ' ' {
+			T1[i] += ' '
 		}
+		count++
 	}
 
-	// Populate T2: Right to left, top to bottom
-	count = 0
-	for i := 0; i < rows; i++ {
-		for j := cols - 1; j >= 0; j-- {
-			T2[i][j] = '0' + rune(count)
-			count++
+	count = a + a
+	for i := 0; i < 95; i++ {
+		T2[i] = ' ' + rune(count%95)
+		if T2[i] < ' ' {
+			T2[i] += ' '
 		}
+		count++
 	}
 
-	// Populate T3: Right to left, bottom to top
-	count = 0
-	for i := rows - 1; i >= 0; i-- {
-		for j := cols - 1; j >= 0; j-- {
-			T3[i][j] = '0' + rune(count)
-			count++
+	count = a * a
+	for i := 0; i < 95; i++ {
+		T3[i] = ' ' + rune(count%95)
+		if T3[i] < ' ' {
+			T3[i] += ' '
 		}
+		count++
 	}
 
-	// Populate T4: Left to right, bottom to top
-	count = 0
-	for i := rows - 1; i >= 0; i-- {
-		for j := 0; j < cols; j++ {
-			T4[i][j] = '0' + rune(count)
-			count++
+	count = (a + a) * a
+	for i := 0; i < 95; i++ {
+		T4[i] = ' ' + rune(count%95)
+		if T4[i] < ' ' {
+			T4[i] += ' '
 		}
+		count++
 	}
-
-	/*
-		// Print tables
-		fmt.Println("Table 1:")
-		for i := 0; i < rows; i++ {
-			for j := 0; j < cols; j++ {
-				fmt.Printf("%c ", T1[i][j])
-			}
-			fmt.Println()
-		}
-
-		fmt.Println("Table 2:")
-		for i := 0; i < rows; i++ {
-			for j := 0; j < cols; j++ {
-				fmt.Printf("%c ", T2[i][j])
-			}
-			fmt.Println()
-		}
-
-		fmt.Println("Table 3:")
-		for i := 0; i < rows; i++ {
-			for j := 0; j < cols; j++ {
-				fmt.Printf("%c ", T3[i][j])
-			}
-			fmt.Println()
-		}
-
-		fmt.Println("Table 4:")
-		for i := 0; i < rows; i++ {
-			for j := 0; j < cols; j++ {
-				fmt.Printf("%c ", T4[i][j])
-			}
-			fmt.Println()
-		}
-	*/
 }
 
 func Cipher(a, b, c int, message string) string {
-	a = (a-1)%36 + 1
-	b = (b-1)%36 + 1
-	c = (c-1)%36 + 1
-	d := a + b + c
+	d := (a * b) + (a * c)
 	j := d % 4
+
+	Tables(a)
 
 	// Pass through each table sequentially
 	for i := 0; i < 4; i++ {
@@ -159,7 +116,7 @@ func Cipher(a, b, c int, message string) string {
 	}
 
 	// Append the values of a, b, c, and d to the encrypted message
-	encryptedMessage := fmt.Sprintf("%02d%02d%02d%03d", a, b, c, d) + message
+	encryptedMessage := fmt.Sprintf("%02d%02d%02d", a, b, c) + message
 
 	return encryptedMessage
 }
@@ -169,36 +126,30 @@ func Decipher(encryptedMessage string) string {
 	a, _ := strconv.Atoi(encryptedMessage[:2])
 	b, _ := strconv.Atoi(encryptedMessage[2:4])
 	c, _ := strconv.Atoi(encryptedMessage[4:6])
-	d, _ := strconv.Atoi(encryptedMessage[6:9])
 
-	// Ensure values are within range 1 to 36
-	a = (a-1)%36 + 1
-	b = (b-1)%36 + 1
-	c = (c-1)%36 + 1
-	d = (d-1)%108 + 1
-
-	message := encryptedMessage[9:]
-	decryptedMessage := ""
+	message := encryptedMessage[6:]
 
 	// Calculate the value of j based on d
+	d := (a * b) + (a * c)
 	j := d % 4
+
+	Tables(a)
 
 	// Pass through each table sequentially in reverse order
 	for i := 0; i < 4; i++ {
-		decryptedMessage = reverseProcessTable(b, c, message, j)
-		j = (j - 1) % 4
-		if j == -1 {
-			j = 3
+		message = reverseProcessTable(b, c, message, j)
+		j--
+		if j < 0 {
+			j = 3 // Ensure j is positive
 		}
 	}
 
-	return decryptedMessage
+	return message
 }
 
 func processTable(b, c int, message string, tableIndex int) string {
-	var table [9][8]rune
+	var table [95]rune
 
-	// Choose the appropriate table
 	switch tableIndex {
 	case 0:
 		table = T1
@@ -210,17 +161,12 @@ func processTable(b, c int, message string, tableIndex int) string {
 		table = T4
 	}
 
-	// Initialize the encrypted message with the original message
 	encryptedMessage := message
 
-	// Process each character in the message
 	for _, char := range message {
-		// Get the row and column index for the current character
-		row := (b + (int(char) - 48)) % 9
-		col := (c + (int(char) - 48)) % 8
+		index := (b + c + (int(char) - 32)) % 95
 
-		// Append the corresponding character from the selected table to the encrypted message
-		encryptedMessage += string(table[row][col])
+		encryptedMessage += string(table[index])
 	}
 
 	encryptedMessage = encryptedMessage[len(message):]
@@ -229,9 +175,8 @@ func processTable(b, c int, message string, tableIndex int) string {
 }
 
 func reverseProcessTable(b, c int, encryptedMessage string, tableIndex int) string {
-	var table [9][8]rune
+	var table [95]rune
 
-	// Choose the appropriate table
 	switch tableIndex {
 	case 0:
 		table = T1
@@ -243,38 +188,16 @@ func reverseProcessTable(b, c int, encryptedMessage string, tableIndex int) stri
 		table = T4
 	}
 
-	// Initialize the decrypted message
 	decryptedMessage := ""
 
-	// Process each character in the message
 	for _, char := range encryptedMessage {
-		// Get the row and column index for the current character
-		row, col := findPositionInTable(table, char, b, c)
+		index := (int(char) - 32 - b - c)
+		if index < 0 {
+			index += 95
+		}
 
-		// Ensure row and col are within range
-		row = (row + 9) % 9
-		col = (col + 8) % 8
-
-		// Append the corresponding character from the selected table to the decrypted message
-		decryptedMessage += string(table[row][col])
+		decryptedMessage += string(table[index])
 	}
 
 	return decryptedMessage
-}
-
-func findPositionInTable(table [9][8]rune, char rune, b, c int) (int, int) {
-	// Find the character's position in the table
-	for i := 0; i < 9; i++ {
-		for j := 0; j < 8; j++ {
-			if table[i][j] == char {
-				// Calculate the original character's position in the table
-				row := (i - b + 9) % 9
-				col := (j - c + 8) % 8
-
-				return row, col
-			}
-		}
-	}
-
-	return -1, -1
 }
