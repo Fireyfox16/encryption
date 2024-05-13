@@ -46,6 +46,7 @@ func Encrypt() {
 	a := rand.Intn(72) + 1
 	b := rand.Intn(72) + 1
 	c := rand.Intn(72) + 1
+
 	encryptedMessage := Cipher(a, b, c, message)
 
 	fmt.Println("Encrypted message:", encryptedMessage)
@@ -106,42 +107,39 @@ func Tables(a int) {
 func Cipher(a, b, c int, message string) string {
 	d := (a * b) + (a * c)
 	j := d % 4
+	j--
 
 	Tables(a)
 
-	// Pass through each table sequentially
 	for i := 0; i < 4; i++ {
 		message = processTable(b, c, message, j)
 		j = (j + 1) % 4
 	}
 
-	// Append the values of a, b, c, and d to the encrypted message
-	encryptedMessage := fmt.Sprintf("%02d%02d%02d", a, b, c) + message
+	encryptedMessage := fmt.Sprintf("%02d%02d%02d%s", a, b, c, message)
 
 	return encryptedMessage
 }
 
 func Decipher(encryptedMessage string) string {
-	// Extract values of a, b, c and d
 	a, _ := strconv.Atoi(encryptedMessage[:2])
 	b, _ := strconv.Atoi(encryptedMessage[2:4])
 	c, _ := strconv.Atoi(encryptedMessage[4:6])
 
 	message := encryptedMessage[6:]
 
-	// Calculate the value of j based on d
 	d := (a * b) + (a * c)
 	j := d % 4
+	j--
 
 	Tables(a)
 
-	// Pass through each table sequentially in reverse order
 	for i := 0; i < 4; i++ {
+		if j < 0 {
+			j = 3
+		}
 		message = reverseProcessTable(b, c, message, j)
 		j--
-		if j < 0 {
-			j = 3 // Ensure j is positive
-		}
 	}
 
 	return message
@@ -164,7 +162,7 @@ func processTable(b, c int, message string, tableIndex int) string {
 	encryptedMessage := message
 
 	for _, char := range message {
-		index := (b + c + (int(char) - 32)) % 95
+		index := ((int(char) - 32 + b + c) + 95) % 95
 
 		encryptedMessage += string(table[index])
 	}
@@ -191,10 +189,7 @@ func reverseProcessTable(b, c int, encryptedMessage string, tableIndex int) stri
 	decryptedMessage := ""
 
 	for _, char := range encryptedMessage {
-		index := (int(char) - 32 - b - c)
-		if index < 0 {
-			index += 95
-		}
+		index := ((int(char) - 32 - b - c) + 95) % 95
 
 		decryptedMessage += string(table[index])
 	}
