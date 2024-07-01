@@ -107,7 +107,6 @@ func Tables(a int) {
 func Cipher(a, b, c int, message string) string {
 	d := (a * b) + (a * c)
 	j := d % 4
-	j--
 
 	Tables(a)
 
@@ -159,15 +158,15 @@ func processTable(b, c int, message string, tableIndex int) string {
 		table = T4
 	}
 
-	encryptedMessage := message
+	encryptedMessage := ""
 
 	for _, char := range message {
 		index := ((int(char) - 32 + b + c) + 95) % 95
 
 		encryptedMessage += string(table[index])
-	}
 
-	encryptedMessage = encryptedMessage[len(message):]
+		b = (b + 1) % 95
+	}
 
 	return encryptedMessage
 }
@@ -189,9 +188,24 @@ func reverseProcessTable(b, c int, encryptedMessage string, tableIndex int) stri
 	decryptedMessage := ""
 
 	for _, char := range encryptedMessage {
-		index := ((int(char) - 32 - b - c) + 95) % 95
+		index := -1
+		for i, tableChar := range table {
+			if tableChar == char {
+				index = i
+				break
+			}
+		}
+		if index == -1 {
+			decryptedMessage += string(char)
+		} else {
+			index = (index - b - c) % 95
+			if index < 0 {
+				index += 95
+			}
+			decryptedMessage += string(rune(index + 32))
+		}
 
-		decryptedMessage += string(table[index])
+		b = (b + 1) % 95
 	}
 
 	return decryptedMessage
